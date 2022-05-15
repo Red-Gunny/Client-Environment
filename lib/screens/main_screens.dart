@@ -30,11 +30,11 @@ class _MainScreensState extends State<MainScreens> {
         index: _selectedIndex,
         children: [
           CameraScreen(camera: widget.firstCamera),
-          LiquorInformation(
+          const LiquorInformation(
             liquorName: "Kahlua",
           ),
           CustomDrinks(),
-          NearLiquorShop(),
+          NearLiquorShop(liquorName: "Tlqkf"),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(

@@ -1,8 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
+import 'dart:convert' as convert;
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:http/http.dart' as http;
 import 'package:dio/adapter.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -90,17 +91,13 @@ class _CameraScreen extends State<CameraScreen> {
             var formData = FormData.fromMap({                       /// HTTP 요청 메세지 만드는 중
               'file': await MultipartFile.fromFile(image.path),
             });
-            final response = await dio.post('/test', data: formData).then(
-                (value) {
-                  if (value == null) {
-                    print('value');
-                    return;
-                  }
-                  Map<String, dynamic> cameraMap = jsonDecode(value.data.toString());
-                  print(cameraMap);
-                  OneResponse cameraResponse = OneResponse.fromJson(cameraMap);
-                  Navigator.of(context).push(MaterialPageRoute(builder: (context)=>NearLiquorShop(liquorName: cameraResponse.name.toString())));
-                }
+
+            final response = await dio.post('/test', data: formData);
+            Map<String, dynamic> cameraMap = response.data;
+            final parsedResponse = OneResponse.fromJson(cameraMap);
+            await Navigator.of(context).push(
+              MaterialPageRoute(
+                  builder: (context) => LiquorInformation(liquorName: parsedResponse.name.toString()))
             );
           } catch (e) {
             print(e);
@@ -113,6 +110,18 @@ class _CameraScreen extends State<CameraScreen> {
     );
   }
 }
+
+/*
+
+var request = http.MultipartRequest("POST", Uri.parse("$yoloServerUrl/test"));
+            request.files.add(await http.MultipartFile.fromPath('file', image.path));
+
+            var response = await request.send();
+            if(response.statusCode == 200) {
+              convert.jsonDecode(response.body) as Map<String, dynamic>
+              print(.runtimeType);
+            }
+ */
 
 /**
  *
@@ -173,4 +182,38 @@ class _CameraScreen extends State<CameraScreen> {
     Navigator.of(context).push(MaterialPageRoute(builder: (context) => LiquorInformation(liquorName: cameraResult.name.toString())));
     }
     );  // 다음 작업으로 안 넘어가.
+ */
+
+/*
+
+final yoloResponse = await dio.post('/test', data: formData);   /// 반환형의 Type :  _InternalLinkedHashMap<String, dynamic>
+            if(yoloResponse.statusCode == 200) {
+              String map = utf8.decode(yoloResponse.data);
+              print(map);
+            } else {
+              throw Exception('yolo server : Failed to load post');
+            }
+ */
+
+/*
+
+final response = await dio.post('/test', data: formData).then(    /// 여기 서버로 이미지가 가는건 확실하게 감
+                (value) {
+                  if (value == null) {
+                    print('value');
+                    return;
+                  }
+                  //Map<String, dynamic> cameraMap = jsonDecode(value.data.toString());
+                  //print(cameraMap);
+                  OneResponse cameraResponse = OneResponse.fromJson(json.decode(utf8.decode(value.data)));
+                  Navigator.of(context).push(
+                      MaterialPageRoute(
+                          builder: (context)=>
+                              NearLiquorShop(
+                                  liquorName: cameraResponse.name.toString()
+                              )
+                      )
+                  );
+                }
+            );
  */

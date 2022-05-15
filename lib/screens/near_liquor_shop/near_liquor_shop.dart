@@ -11,7 +11,7 @@ class NearLiquorShop extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("TLqkf"),
+        title: Text(liquorName),
       ),
       body: Text(liquorName),
     );

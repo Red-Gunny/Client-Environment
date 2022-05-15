@@ -11,6 +11,7 @@ import 'package:graduation_project/models/one_response.dart';
 import '../../models/camera_response.dart';
 import '../information_result/liquor_information.dart';
 import '../../util/config.dart';
+import '../near_liquor_shop/near_liquor_shop.dart';
 
 // A screen that allows users to take a picture using a given camera.
 class CameraScreen extends StatefulWidget {
@@ -28,8 +29,8 @@ class CameraScreen extends StatefulWidget {
 class _CameraScreen extends State<CameraScreen> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
-
   late Dio dio;
+
 
   @override
   void initState() {
@@ -45,6 +46,7 @@ class _CameraScreen extends State<CameraScreen> {
     dio.options.baseUrl = yoloServerUrl;
     dio.options.connectTimeout = 10000;
     dio.options.receiveTimeout = 10000;
+
   }
 
   @override
@@ -52,6 +54,13 @@ class _CameraScreen extends State<CameraScreen> {
     _controller.dispose();
     super.dispose();
   }
+
+  /*Future<dynamic> getLabelAnalysis(var formData) async {
+    final response = await dio.post('/test', data: formData);
+    Map cameraMap = jsonDecode(response.data.toString());
+    OneResponse cameraResponse = OneResponse.fromJson(cameraMap);
+    return cameraResponse.name.toString();
+  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +79,6 @@ class _CameraScreen extends State<CameraScreen> {
             return const Center(child: CircularProgressIndicator());
           }
         },
-
       ),
 
       /// 3. floatingActionButtion (버튼 눌렀을 때 무슨 동작을 해야할까)
@@ -82,20 +90,18 @@ class _CameraScreen extends State<CameraScreen> {
             var formData = FormData.fromMap({                       /// HTTP 요청 메세지 만드는 중
               'file': await MultipartFile.fromFile(image.path),
             });
-            final response = await dio.post('/test', data: formData);   ///  서버로 가긴 했어
-
-            Map cameraMap = jsonDecode(response.data.toString());
-            OneResponse cameraResponse = OneResponse.fromJson(cameraMap);
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                  builder: (context) => LiquorInformation(
-                    liquorName: cameraResponse.name.toString(),
-                  )
-              ),
+            final response = await dio.post('/test', data: formData).then(
+                (value) {
+                  if (value == null) {
+                    print('value');
+                    return;
+                  }
+                  Map<String, dynamic> cameraMap = jsonDecode(value.data.toString());
+                  print(cameraMap);
+                  OneResponse cameraResponse = OneResponse.fromJson(cameraMap);
+                  Navigator.of(context).push(MaterialPageRoute(builder: (context)=>NearLiquorShop(liquorName: cameraResponse.name.toString())));
+                }
             );
-
           } catch (e) {
             print(e);
           }
@@ -107,3 +113,64 @@ class _CameraScreen extends State<CameraScreen> {
     );
   }
 }
+
+/**
+ *
+ *
+ * //Map cameraMap = jsonDecode(yoloResponse.data.toString());
+    //OneResponse cameraResult = OneResponse.fromJson(cameraMap);
+
+    //Navigator.of(context).push(MaterialPageRoute(
+    //builder: (context) => LiquorInformation(
+    //liquorName: cameraResult.name.toString())));
+
+
+    /*final result = await dio.post('/test', data: formData);
+    if (result.statusCode == 200) {
+    Map cameraMap = jsonDecode(re.data.toString());
+    OneResponse cameraResponse = OneResponse.fromJson(cameraMap);
+
+    print("Tlqkf${cameraResponse.name}");
+
+    Navigator.push(
+    context,
+    MaterialPageRoute(
+    builder: (context) => LiquorInformation(
+    liquorName: cameraResponse.name.toString(),
+    )
+    ),
+    );
+    }*/
+
+
+    /*
+    await dio.post('/test', data: formData).then((response) {
+    Map cameraMap = jsonDecode(response.data.toString());
+    OneResponse cameraResponse = OneResponse.fromJson(cameraMap);
+
+    print("Tlqkf${cameraResponse.name}");
+
+    Navigator.push(
+    context,
+    MaterialPageRoute(
+    builder: (context) => LiquorInformation(
+    liquorName: cameraResponse.name.toString(),
+    )
+    ),
+    );
+    });*/   ///  서버로 가긴 했어
+
+
+
+    print("post before");
+    await dio.post('/test', data: formData).then(
+    (yoloResponse) {
+
+    print("then in");
+
+    Map cameraMap = jsonDecode(yoloResponse.data.toString());
+    OneResponse cameraResult = OneResponse.fromJson(cameraMap);
+    Navigator.of(context).push(MaterialPageRoute(builder: (context) => LiquorInformation(liquorName: cameraResult.name.toString())));
+    }
+    );  // 다음 작업으로 안 넘어가.
+ */

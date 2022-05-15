@@ -7,7 +7,7 @@ class OneResponse {
 
 
 
-  OneResponse.fromJson(Map<dynamic, dynamic> json) {
+  OneResponse.fromJson(Map<String, dynamic> json) {
     accuracy = json['accuracy'];
     index = json['index'];
     name = json['name'];

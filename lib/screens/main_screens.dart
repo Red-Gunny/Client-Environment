@@ -6,6 +6,7 @@ import 'custom_drinks/custom_drinks.dart';
 import 'drink_list/drink_list.dart';
 import 'near_liquor_shop/near_liquor_shop.dart';
 
+// 테스트용
 import 'information_result/liquor_information.dart';
 
 class MainScreens extends StatefulWidget {
@@ -30,9 +31,7 @@ class _MainScreensState extends State<MainScreens> {
         index: _selectedIndex,
         children: [
           CameraScreen(camera: widget.firstCamera),
-          const LiquorInformation(
-            liquorName: "Kahlua",
-          ),
+          DrinkList(),
           CustomDrinks(),
           NearLiquorShop(liquorName: "Tlqkf"),
         ],

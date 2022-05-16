@@ -3,6 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:camera/camera.dart';
+//import 'package:simpleprogressdialog/builders/cupertino_dialog_builder.dart';
+//import 'package:simpleprogressdialog/builders/material_dialog_builder.dart';
+//import 'package:simpleprogressdialog/simpleprogressdialog.dart';
 
 import '../../models/camera_response.dart';
 import '../information_result/liquor_information.dart';
@@ -54,16 +57,31 @@ class CameraScreenState extends State<CameraScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //appBar: AppBar(title: const Text('Take a picture')),
+      appBar: AppBar(
+        title: Text(''),
+        backgroundColor: Colors.transparent,
+        elevation: 0.0,
+      ),
+      extendBodyBehindAppBar: true,
       extendBody: true,
       /// 2. body
       /// 카메라 preview가 나타나기 전 까지 contoller가 초기화 되도록 반드시 기다려야한다.
       /// controller 초기화가 끝날 때까지 FutureBuilder(로딩 스피너를 보여주기 위한 목적의)를 이용해라.
+      /// // CameraPreview(_controller);
       body: FutureBuilder<void>(
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return CameraPreview(_controller);
+            final mediaSize = MediaQuery.of(context).size;
+            final scale = 1 / (_controller.value.aspectRatio * mediaSize.aspectRatio);
+            return ClipRect(
+              clipper: _MediaSizeClipper(mediaSize),
+              child: Transform.scale(
+                scale: scale,
+                alignment: Alignment.topCenter,
+                child: CameraPreview(_controller),
+              ),
+            );
           } else {
             return const Center(child: CircularProgressIndicator());
           }
@@ -97,3 +115,19 @@ class CameraScreenState extends State<CameraScreen> {
     );
   }
 }
+
+class _MediaSizeClipper extends CustomClipper<Rect> {
+  final Size mediaSize;
+  const _MediaSizeClipper(this.mediaSize);
+
+  @override
+  Rect getClip(Size size) {
+    return Rect.fromLTWH(0, 0, mediaSize.width, mediaSize.height);
+  }
+
+  @override
+  bool shouldReclip(CustomClipper<Rect> oldClipper) {
+    return true;
+  }
+}
+

@@ -1,37 +1,32 @@
 import 'dart:async';
-import 'dart:convert' as convert;
-import 'dart:io';
 
-import 'package:dio/dio.dart';
-import 'package:http/http.dart' as http;
-import 'package:dio/adapter.dart';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:graduation_project/models/one_response.dart';
+import 'package:dio/dio.dart';
+import 'package:camera/camera.dart';
 
 import '../../models/camera_response.dart';
 import '../information_result/liquor_information.dart';
 import '../../util/config.dart';
-import '../near_liquor_shop/near_liquor_shop.dart';
 
-// A screen that allows users to take a picture using a given camera.
+// 중간발표용 임시
+import '../../models/one_response.dart';
+
 class CameraScreen extends StatefulWidget {
+  final CameraDescription camera;
+
   const CameraScreen({
     Key? key,
     required this.camera,
   }) : super(key: key);
 
-  final CameraDescription camera;
-
   @override
-  _CameraScreen createState() => _CameraScreen();
+  CameraScreenState createState() => CameraScreenState();
 }
 
-class _CameraScreen extends State<CameraScreen> {
+class CameraScreenState extends State<CameraScreen> {
   late CameraController _controller;
   late Future<void> _initializeControllerFuture;
-  late Dio dio;
-
+  late Dio yoloDio;
 
   @override
   void initState() {
@@ -41,13 +36,13 @@ class _CameraScreen extends State<CameraScreen> {
       ResolutionPreset.medium,
     );
     _initializeControllerFuture = _controller.initialize();
-
-    dio = Dio();
-    dio.options.contentType = 'multipart/form-data';
-    dio.options.baseUrl = yoloServerUrl;
-    dio.options.connectTimeout = 10000;
-    dio.options.receiveTimeout = 10000;
-
+    final options = BaseOptions(
+      contentType: yoloContentType,
+      baseUrl: yoloServerUrl,
+      connectTimeout: yoloConnectTimeout,
+      receiveTimeout: yoloReceiveTimeout,
+    );
+    yoloDio = Dio(options);
   }
 
   @override
@@ -56,21 +51,14 @@ class _CameraScreen extends State<CameraScreen> {
     super.dispose();
   }
 
-  /*Future<dynamic> getLabelAnalysis(var formData) async {
-    final response = await dio.post('/test', data: formData);
-    Map cameraMap = jsonDecode(response.data.toString());
-    OneResponse cameraResponse = OneResponse.fromJson(cameraMap);
-    return cameraResponse.name.toString();
-  }*/
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       //appBar: AppBar(title: const Text('Take a picture')),
       extendBody: true,
-      /// 2. body 부분
-      /// 카메라 preview가 나타나기 전 까지 contoller가 초기화 될 때까지 반드시 기다려야한다.
-      /// controller가 초기화 끝날 때까지 FutureBuilder(로딩 스피너를 보여주기 위한 목적의)를 이용해라.
+      /// 2. body
+      /// 카메라 preview가 나타나기 전 까지 contoller가 초기화 되도록 반드시 기다려야한다.
+      /// controller 초기화가 끝날 때까지 FutureBuilder(로딩 스피너를 보여주기 위한 목적의)를 이용해라.
       body: FutureBuilder<void>(
         future: _initializeControllerFuture,
         builder: (context, snapshot) {
@@ -81,28 +69,27 @@ class _CameraScreen extends State<CameraScreen> {
           }
         },
       ),
-
       /// 3. floatingActionButtion (버튼 눌렀을 때 무슨 동작을 해야할까)
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () async {
           try {
             await _initializeControllerFuture;
             final image = await _controller.takePicture();          /// ★★★★★ 사진이 찍히는 부분 ★★★★★
-            var formData = FormData.fromMap({                       /// HTTP 요청 메세지 만드는 중
+            var formData = FormData.fromMap({                       /// HTTP 요청 메세지 만드는 과정
               'file': await MultipartFile.fromFile(image.path),
             });
-
-            final response = await dio.post('/test', data: formData);
-            Map<String, dynamic> cameraMap = response.data;
-            final parsedResponse = OneResponse.fromJson(cameraMap);
-            await Navigator.of(context).push(
+            final yoloResponse = await yoloDio.post(yoloServerPath, data: formData);   /// YOLO 서버에 이미지 전송
+            Map<String, dynamic> responseMap = yoloResponse.data;                 /// 결과를 Map에 담고             [YOLO 서버 응답]
+            final parsedYoloResponse = OneResponse.fromJson(responseMap);         /// Map을 OneResponse로 바꿈     [YOLO 서버 응답]
+            await Navigator.of(context).push(                                   /// 술 정보 페이지로 화면 이동  (비동기에서 context 쓰지 말라는데 왜?)
               MaterialPageRoute(
-                  builder: (context) => LiquorInformation(liquorName: parsedResponse.name.toString()))
+                  builder: (context) => LiquorInformation(liquorName: parsedYoloResponse.name.toString())
+              )
             );
           } catch (e) {
             print(e);
           }
-        },
+        }, // onPressed
         label:  const Text('촬영'),
         icon: const Icon(Icons.camera),
         backgroundColor: Colors.grey,
@@ -110,110 +97,3 @@ class _CameraScreen extends State<CameraScreen> {
     );
   }
 }
-
-/*
-
-var request = http.MultipartRequest("POST", Uri.parse("$yoloServerUrl/test"));
-            request.files.add(await http.MultipartFile.fromPath('file', image.path));
-
-            var response = await request.send();
-            if(response.statusCode == 200) {
-              convert.jsonDecode(response.body) as Map<String, dynamic>
-              print(.runtimeType);
-            }
- */
-
-/**
- *
- *
- * //Map cameraMap = jsonDecode(yoloResponse.data.toString());
-    //OneResponse cameraResult = OneResponse.fromJson(cameraMap);
-
-    //Navigator.of(context).push(MaterialPageRoute(
-    //builder: (context) => LiquorInformation(
-    //liquorName: cameraResult.name.toString())));
-
-
-    /*final result = await dio.post('/test', data: formData);
-    if (result.statusCode == 200) {
-    Map cameraMap = jsonDecode(re.data.toString());
-    OneResponse cameraResponse = OneResponse.fromJson(cameraMap);
-
-    print("Tlqkf${cameraResponse.name}");
-
-    Navigator.push(
-    context,
-    MaterialPageRoute(
-    builder: (context) => LiquorInformation(
-    liquorName: cameraResponse.name.toString(),
-    )
-    ),
-    );
-    }*/
-
-
-    /*
-    await dio.post('/test', data: formData).then((response) {
-    Map cameraMap = jsonDecode(response.data.toString());
-    OneResponse cameraResponse = OneResponse.fromJson(cameraMap);
-
-    print("Tlqkf${cameraResponse.name}");
-
-    Navigator.push(
-    context,
-    MaterialPageRoute(
-    builder: (context) => LiquorInformation(
-    liquorName: cameraResponse.name.toString(),
-    )
-    ),
-    );
-    });*/   ///  서버로 가긴 했어
-
-
-
-    print("post before");
-    await dio.post('/test', data: formData).then(
-    (yoloResponse) {
-
-    print("then in");
-
-    Map cameraMap = jsonDecode(yoloResponse.data.toString());
-    OneResponse cameraResult = OneResponse.fromJson(cameraMap);
-    Navigator.of(context).push(MaterialPageRoute(builder: (context) => LiquorInformation(liquorName: cameraResult.name.toString())));
-    }
-    );  // 다음 작업으로 안 넘어가.
- */
-
-/*
-
-final yoloResponse = await dio.post('/test', data: formData);   /// 반환형의 Type :  _InternalLinkedHashMap<String, dynamic>
-            if(yoloResponse.statusCode == 200) {
-              String map = utf8.decode(yoloResponse.data);
-              print(map);
-            } else {
-              throw Exception('yolo server : Failed to load post');
-            }
- */
-
-/*
-
-final response = await dio.post('/test', data: formData).then(    /// 여기 서버로 이미지가 가는건 확실하게 감
-                (value) {
-                  if (value == null) {
-                    print('value');
-                    return;
-                  }
-                  //Map<String, dynamic> cameraMap = jsonDecode(value.data.toString());
-                  //print(cameraMap);
-                  OneResponse cameraResponse = OneResponse.fromJson(json.decode(utf8.decode(value.data)));
-                  Navigator.of(context).push(
-                      MaterialPageRoute(
-                          builder: (context)=>
-                              NearLiquorShop(
-                                  liquorName: cameraResponse.name.toString()
-                              )
-                      )
-                  );
-                }
-            );
- */

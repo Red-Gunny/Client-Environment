@@ -3,9 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 import 'package:camera/camera.dart';
-//import 'package:simpleprogressdialog/builders/cupertino_dialog_builder.dart';
-//import 'package:simpleprogressdialog/builders/material_dialog_builder.dart';
-//import 'package:simpleprogressdialog/simpleprogressdialog.dart';
+import 'package:sn_progress_dialog/sn_progress_dialog.dart';
 
 import '../../models/camera_response.dart';
 import '../information_result/liquor_information.dart';
@@ -96,7 +94,22 @@ class CameraScreenState extends State<CameraScreen> {
             var formData = FormData.fromMap({                       /// HTTP 요청 메세지 만드는 과정
               'file': await MultipartFile.fromFile(image.path),
             });
-            final yoloResponse = await yoloDio.post(yoloServerPath, data: formData);   /// YOLO 서버에 이미지 전송
+            ProgressDialog progressDialog = ProgressDialog(context: context);
+            progressDialog.show(
+                max:100,
+                msg: '사진을 분석 중입니다...',
+                completed: Completed(
+                  completedMsg: '찾았다!',
+                  closedDelay: 1000
+                ));
+            final yoloResponse = await yoloDio.post(yoloServerPath,
+              data: formData,
+              onReceiveProgress: (rec, total) {
+                int progress = (((rec / total) * 100).toInt());
+                progressDialog.update(value: progress);
+              }
+            );   /// YOLO 서버에 이미지 전송
+            progressDialog.close();
             Map<String, dynamic> responseMap = yoloResponse.data;                 /// 결과를 Map에 담고             [YOLO 서버 응답]
             final parsedYoloResponse = OneResponse.fromJson(responseMap);         /// Map을 OneResponse로 바꿈     [YOLO 서버 응답]
             await Navigator.of(context).push(                                   /// 술 정보 페이지로 화면 이동  (비동기에서 context 쓰지 말라는데 왜?)
@@ -116,6 +129,7 @@ class CameraScreenState extends State<CameraScreen> {
   }
 }
 
+/// 카메라 프리뷰 사이즈 조정 관련 클래스
 class _MediaSizeClipper extends CustomClipper<Rect> {
   final Size mediaSize;
   const _MediaSizeClipper(this.mediaSize);

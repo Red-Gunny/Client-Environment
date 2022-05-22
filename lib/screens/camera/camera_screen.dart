@@ -60,9 +60,10 @@ class CameraScreenState extends State<CameraScreen> {
             progressDialog.show(max:100, msg: '사진을 분석 중입니다...', completed: Completed(completedMsg: '찾았다!', closedDelay: 2000));
             final yoloResponse = await yoloDio.post(yoloServerPath, data: imageFormData);   /// YOLO 서버에 이미지 전송
             progressDialog.close();                                                /// 진행 중 화면 닫기
+
             Map<String, dynamic> responseMap = yoloResponse.data;                 /// 결과를 Map에 담고(type casting)
             final parsedYoloResponse = CameraResponse.fromJson(responseMap);      /// Map을 OneResponse로 바꿈
-
+            print("Tlqkf-after");
             if (parsedYoloResponse.size! > 1) {             /// 여러 개일 때 선택받아야함
               await _showChoiceDialog(context, liquors: parsedYoloResponse.liquors!);
             } else if (parsedYoloResponse.size! == 1) {     /// 1개일 때는 다이렉트 이동
@@ -75,7 +76,23 @@ class CameraScreenState extends State<CameraScreen> {
                 )
               );
             } else {  // 에러 처리 필요
-
+              showDialog(
+                context: context,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text("인식에 실패했습니다."),
+                    content: Text("다시 한번 찍어보세요"),
+                    actions: [
+                      ElevatedButton(
+                        child: Text("예"),
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                        },
+                      )
+                    ],
+                  );
+                }
+              );
             }
           } catch (e) {
             print(e);
@@ -119,8 +136,24 @@ class CameraScreenState extends State<CameraScreen> {
   Future<FormData> _createImageToHttpForm({required String key, required XFile image}) async =>
       FormData.fromMap({key: await MultipartFile.fromFile(image.path)});
 
+  Future<dynamic> _showEmptyDialog(BuildContext context) async {
+    return showDialog(
+        context: context,
+        builder: (BuildContext context) =>
+            AlertDialog(
+              title: const Text("술 인식이 1개도 안 됐어요"),
+              content: const Text("다시 찍어보세요"),
+              actions: [
+                ElevatedButton(onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                    child: const Text('예')),
+              ],
+            ),
+    );
+  }
 
-  /// 팝업 보여주는 함수
+  /// 선택 팝업 보여주는 함수
   Future<dynamic> _showChoiceDialog(BuildContext context, {required List<CameraLiquor> liquors}) async {
     return showDialog(
       context: context,
@@ -177,7 +210,6 @@ class CameraScreenState extends State<CameraScreen> {
       )
     );
   }
-
 }
 
 

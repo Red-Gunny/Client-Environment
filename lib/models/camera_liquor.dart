@@ -1,11 +1,11 @@
-class OneResponse {
+class CameraLiquor {
   double? accuracy;
   int? index;
   String? name;
 
-  OneResponse({this.accuracy, this.index, this.name});
+  CameraLiquor({this.accuracy, this.index, this.name});
 
-  OneResponse.fromJson(Map<String, dynamic> json) {
+  CameraLiquor.fromJson(Map<String, dynamic> json) {
     accuracy = json['accuracy'];
     index = json['index'];
     name = json['name'];

@@ -2,7 +2,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'camera/camera_screen.dart';
-import 'custom_drinks/custom_drinks.dart';
+import 'custom_drinks/custom_drink_list.dart';
+import 'custom_ranking/custom_ranking_screen.dart';
 import 'drink_list/drink_list.dart';
 import 'near_liquor_shop/near_liquor_shop.dart';
 
@@ -32,7 +33,7 @@ class _MainScreensState extends State<MainScreens> {
         children: [
           CameraScreen(camera: widget.firstCamera),
           DrinkList(),
-          CustomDrinks(),
+          CustomRankingScreen(),
           NearLiquorShop(liquorName: "Tlqkf"),
         ],
       ),

@@ -29,10 +29,10 @@ class CameraScreenState extends State<CameraScreen> {
     _controller = CameraController(widget.camera, ResolutionPreset.medium);
     _initializeControllerFuture = _controller.initialize();
     final options = BaseOptions(               /// Dio 라이브러리 사용하기 위한 초기화
-      contentType: yoloContentType,
+      contentType: 'multipart/form-data',
       baseUrl: yoloServerUrl,
-      connectTimeout: yoloConnectTimeout,
-      receiveTimeout: yoloReceiveTimeout,
+      connectTimeout: 10000,
+      receiveTimeout: 10000,
     );
     yoloDio = Dio(options);                   /// Dio 객체 생성.
   }
